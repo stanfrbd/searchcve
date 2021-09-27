@@ -5,6 +5,7 @@
 import sys
 import requests
 import re
+from datetime import datetime
 
 # Example of usage
 
@@ -17,6 +18,9 @@ import re
 # ./searchcve.py https://us-cert.cisa.gov/ncas/alerts/aa21-209a
 # ./searchcve.py https://nvd.nist.gov/ 
 
+# Current date
+now = datetime.now()
+today = now.strftime("%Y-%m-%d-%H:%M:%S")
 
 # Lists
 
@@ -24,7 +28,7 @@ cvss_list = []
 cves_list = []
 sources_list = []
 url_list = []
-csv = "cve_search,cvss,source,url\n"
+csv = "cve,cvss,source,url\n"
 
 # Argument #1
 
@@ -105,8 +109,11 @@ if base_request.status_code == 200:
     # print(*url_list, sep='\n')
 
     # To redirect into a file
-    # print("\nGenerated CSV:\n")
+    print("\nGenerated CSV: ./" + today + "-export.csv\n")
     # print(csv)
+    f = open(today + "-export.csv", "w")
+    f.write(csv)
+    f.close()
 
 else:
     print("HTTP error: " + str(base_request.status_code))
