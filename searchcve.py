@@ -64,7 +64,7 @@ if base_request.status_code == 200:
         elif cvss_search is None:
             cvss = "0.0"
 
-        potential_source = re.search("\"vuln-current-description-source\">[0-9A-Za-z, \./]+</span>", nist_text)
+        potential_source = re.search("\"vuln-current-description-source\">[0-9A-Za-z, \./@]+</span>", nist_text)
         if potential_source is not None:
             potential_source = potential_source.group()
             potential_source = potential_source.replace("<", ";")
