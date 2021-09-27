@@ -1,6 +1,8 @@
 # searchcve
 > Web scrapping tool written in python3, using regex, to get CVEs, Source and URLs.
 
+> Generates a CSV file in the current directory.
+
 ### Example of usage
 
 ```
@@ -16,6 +18,9 @@ python3 searchcve.py https://nvd.nist.gov/
 ./searchcve.py https://nvd.nist.gov/ 
 ```
 
-![unknown](https://user-images.githubusercontent.com/44167150/134923592-fd684a39-0c02-4295-b264-0bd273a5cf7a.png)
+![image](https://user-images.githubusercontent.com/44167150/134931282-ca33dba3-4ab6-474d-8e5a-3da9e6013e6a.png)
+
+![image](https://user-images.githubusercontent.com/44167150/134931413-1e3dc51d-9c8f-44b2-acbd-fa4fc1fff8f4.png)
+
 
 
