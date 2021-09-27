@@ -73,6 +73,8 @@ if base_request.status_code == 200:
             potential_source = potential_source.group()
             potential_source = potential_source.replace("<", ";")
             potential_source = potential_source.replace(">", ";")
+            # Avoid CSV error
+            potential_source = potential_source.replace(",", "")
             source = potential_source.split(";")[1]
         elif potential_source is None:
             source = "Unknown"
@@ -83,8 +85,9 @@ if base_request.status_code == 200:
         url_list.append(nist_url)
 
         sources_list.append(source)
-
+        # CSV text
         csv += cves_list[i] + "," + cvss + "," + source + "," + nist_url + "\n"
+        # Pretty print
         pretty_cve = cves_list[i]
         if len(cves_list[i]) != 16:
             for i in range (16 - len(cves_list[i])):
