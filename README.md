@@ -3,6 +3,14 @@
 
 > Generates a CSV file in the current directory.
 
+### Dependencies
+
+* `requests` must be installed.
+
+`pip install requests` should do this job :)
+
+
+
 ### Example of usage
 
 ```sh
