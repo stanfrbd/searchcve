@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Stanislas MEDRANO 2021 09 27
+# Stanislas M. 2021 09 27
 
 import sys
 import requests
