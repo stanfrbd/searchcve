@@ -18,22 +18,53 @@ optional arguments:
 import json
 import argparse
 import re
+import requests
 from os.path import exists
 from pathlib import Path
 import subprocess
 
 
 
-# Checks
+# CHECKS
+
+def is_cve(txt):
+    match = re.search("(CVE|cve)-[0-9]{4}-[0-9]{4,}$", txt)
+    if match:
+        return True
+    else:
+        return False
+
+def is_url(txt):
+    if "http" in txt:
+        return True
+    else:
+        return False
+
+# CVE -c / --cve
 
 def action_cve(txt):
-    match = re.search("(CVE|cve)-[0-9]{4}-[0-9]{4,}", txt)
-    if match:
-        print(txt)
-        print("Will perform: https://services.nvd.nist.gov/rest/json/cve/1.0/" + txt)
+    if is_cve(txt):
+        cve_info(txt)
     else:
         print("\"" + txt + "\" is not a valid CVE, aborting.")
-        quit()
+
+def cve_info(txt):
+    nist_api_url = "https://services.nvd.nist.gov/rest/json/cve/1.0/" + txt
+    base_request = requests.get(nist_api_url)
+    if base_request.status_code == 200:
+        todos = json.loads(base_request.text)
+        print("cve: ", todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ID"])
+        print("publishedDate: ", todos["result"]["CVE_Items"][0]["publishedDate"].split("T")[0])
+        print("lastModifiedDate: ", todos["result"]["CVE_Items"][0]["lastModifiedDate"].split("T")[0])
+        print("assigner: ", todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ASSIGNER"])
+        print("description: ", todos["result"]["CVE_Items"][0]["cve"]["description"]["description_data"][0]["value"])
+        print("baseScore: ",todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseScore"])
+        print("baseSeverity: ",todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"])
+        print("More info: https://nvd.nist.gov/vuln/detail/" + txt + "\n")
+    else:
+        print('"', txt, "\" not found in database.")
+
+# KEYWORD -k / --keyword
 
 def action_keyword(txt):
     if txt != "":
@@ -41,22 +72,25 @@ def action_keyword(txt):
         print("Will perform: https://services.nvd.nist.gov/rest/json/cves/1.0?keyword=" + txt)
     else:
         print("\"" + txt + "\" is not a valid keyword, aborting.")
-        quit()
+
+# URL -u / --url
 
 def action_url(txt):
-    if "http" in txt:
+    if is_url(txt):
         print(txt)
         subprocess.call(["python3", "searchcve.py", txt])
     else:
         print("\"" + txt + "\" is not a valid URL, aborting.")
-        quit()
+
+# INPUT_FILE -i / --input-file
 
 def action_file(txt):
     if Path(txt).is_file():
         print(txt)
     else:
         print("\"" + txt + "\" is not a valid file, aborting.")
-        quit()
+
+# PARSER
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c','--cve', help='Choose CVE e.g. CVE-2020-1472')
