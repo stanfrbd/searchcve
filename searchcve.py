@@ -20,7 +20,7 @@ from datetime import datetime
 
 # Current date
 now = datetime.now()
-today = now.strftime("%Y-%m-%d-%H:%M:%S")
+today = now.strftime("%Y-%m-%d-%H_%M_%S")
 
 # Lists
 
