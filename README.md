@@ -53,10 +53,11 @@ python3 searchcve_api.py -u https://nvd.nist.gov/
 > This will call `python3 searchcve.py https://nvd.nist.gov/`
 
 ```sh
-python3 searchcve_api.py -c CVE-2020-1472
+python3 searchcve_api.py -c CVE-2020-1467
 ```
+![image](https://user-images.githubusercontent.com/44167150/135273265-68066829-6d00-4523-bc17-12b4c765d4cf.png)
 
-> This will make this API call `https://services.nvd.nist.gov/rest/json/cve/1.0/CVE-2020-1472`
+> This will make this API call `https://services.nvd.nist.gov/rest/json/cve/1.0/CVE-2020-1467`
 
 
 ```sh
