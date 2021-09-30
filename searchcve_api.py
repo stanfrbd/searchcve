@@ -40,6 +40,14 @@ def is_url(txt):
     else:
         return False
 
+def find_urls(string):
+    # Credit https://www.geeksforgeeks.org/python-check-url-string/
+    # findall() has been used 
+    # with valid conditions for urls in string
+    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    url = re.findall(regex,string)      
+    return [x[0] for x in url]
+
 # CVE -c / --cve
 
 def action_cve(txt):
@@ -86,7 +94,18 @@ def action_url(txt):
 
 def action_file(txt):
     if Path(txt).is_file():
-        print(txt)
+        input_file = open(txt, "r")
+        data = input_file.read()
+        input_file.close()
+        cves_list_file = re.findall("CVE-[0-9]{4}-[0-9]{4,}", data, flags=re.IGNORECASE)
+        urls_list_file = find_urls(data)
+        if cves_list_file != []:
+            sorted_cves_file = sorted(set(cves_list_file))
+            for i in range (0, len(sorted_cves_file)):
+                action_cve(sorted_cves_file[i])
+        if urls_list_file != []:
+            for i in range (0, len(urls_list_file)):
+                action_url(urls_list_file[i])
     else:
         print("\"" + txt + "\" is not a valid file, aborting.")
 
