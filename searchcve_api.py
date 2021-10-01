@@ -22,8 +22,16 @@ import requests
 from os.path import exists
 from pathlib import Path
 import subprocess
+from datetime import datetime
 
+# Current date
 
+now = datetime.now()
+today = now.strftime("%Y-%m-%d-%H_%M_%S")
+
+# CSV
+
+csv = "cve,cvss,source,url\n"
 
 # CHECKS
 
@@ -61,14 +69,27 @@ def cve_info(txt):
     base_request = requests.get(nist_api_url)
     if base_request.status_code == 200:
         todos = json.loads(base_request.text)
-        print("cve: ", todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ID"])
+        cve = todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ID"]
+        source = todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ASSIGNER"]
+        print("cve: ", cve)
         print("publishedDate: ", todos["result"]["CVE_Items"][0]["publishedDate"].split("T")[0])
         print("lastModifiedDate: ", todos["result"]["CVE_Items"][0]["lastModifiedDate"].split("T")[0])
-        print("assigner: ", todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ASSIGNER"])
+        print("assigner: ", source)
         print("description: ", todos["result"]["CVE_Items"][0]["cve"]["description"]["description_data"][0]["value"])
-        print("baseScore: ",todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseScore"])
-        print("baseSeverity: ",todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"])
-        print("More info: https://nvd.nist.gov/vuln/detail/" + txt + "\n")
+        
+        try:
+            cvss = todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseScore"]
+            print("baseScore: ", cvss)
+
+        except KeyError:
+            print("baseScore: Unknown or too old")
+            cvss = "0.0"
+        nist_url = "https://nvd.nist.gov/vuln/detail/" + txt
+        print("More info: " + nist_url + "\n")
+
+        if args.input_file:
+            global csv
+            csv += cve + "," + str(cvss) + "," + source + "," + nist_url + "\n"
     else:
         print('"', txt, "\" not found in database.")
 
@@ -76,8 +97,9 @@ def cve_info(txt):
 
 def action_keyword(txt):
     if txt != "":
-        print(txt)
-        print("Will perform: https://services.nvd.nist.gov/rest/json/cves/1.0?keyword=" + txt)
+        # print(txt)
+        # print("Will perform: https://services.nvd.nist.gov/rest/json/cves/1.0?keyword=" + txt)
+        action_url("https://services.nvd.nist.gov/rest/json/cves/1.0?keyword=" + txt)
     else:
         print("\"" + txt + "\" is not a valid keyword, aborting.")
 
@@ -103,6 +125,12 @@ def action_file(txt):
             sorted_cves_file = sorted(set(cves_list_file))
             for i in range (0, len(sorted_cves_file)):
                 action_cve(sorted_cves_file[i])
+            # To redirect into a file
+            print("\nGenerated CSV: ./" + today + "-export.csv\n")
+            # print(csv)
+            f = open(today + "-export.csv", "w")
+            f.write(csv)
+            f.close()
         if urls_list_file != []:
             for i in range (0, len(urls_list_file)):
                 action_url(urls_list_file[i])
@@ -112,16 +140,16 @@ def action_file(txt):
 # PARSER
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c','--cve', help='Choose CVE e.g. CVE-2020-1472')
-parser.add_argument('-k','--keyword', help='Choose keyword e.g. microsoft')
-parser.add_argument('-u','--url', help='Choose URL e.g. https://nvd.nist.gov/')
-parser.add_argument('-i','--input-file', help='Choose the path to input file e.g. test.csv')
+parser.add_argument('-c','--cve', help='Choose CVE e.g. "CVE-2020-1472"')
+parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
+parser.add_argument('-u','--url', help='Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory')
+parser.add_argument('-i','--input-file', help='Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory')
 
 args = parser.parse_args()
 
 if args.cve:
     action_cve(args.cve)
-    
+        
 if args.keyword:
     action_keyword(args.keyword)
 
@@ -129,4 +157,4 @@ if args.url:
     action_url(args.url)
 
 if args.input_file:
-    action_file(args.input_file)
+    action_file(args.input_file)    

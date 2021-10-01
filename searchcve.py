@@ -55,9 +55,9 @@ if base_request.status_code == 200:
     cves_list = sorted(set(cve_search))
 
     print("\nFound CVEs:\n")
-    print("----------------------------------------------------------------------------------------------------------")
-    print("CVE              | CVSS | Source                     | URL                                               |")
-    print("----------------------------------------------------------------------------------------------------------")
+    print("-------------------------------------------------------------------------------------------------------------------")
+    print("CVE              | CVSS | Source                              | URL                                               |")
+    print("-------------------------------------------------------------------------------------------------------------------")
     for i in range (0, len(cves_list)):
         nist_url = "https://nvd.nist.gov/vuln/detail/" + cves_list[i]
         nist_request = requests.get(nist_url)
@@ -68,7 +68,7 @@ if base_request.status_code == 200:
         elif cvss_search is None:
             cvss = "0.0"
 
-        potential_source = re.search("\"vuln-current-description-source\">[0-9A-Za-z, \./@]+</span>", nist_text)
+        potential_source = re.search("\"vuln-current-description-source\">[0-9A-Za-z, \./@\(\)]+</span>", nist_text)
         if potential_source is not None:
             potential_source = potential_source.group()
             potential_source = potential_source.replace("<", ";")
@@ -94,16 +94,15 @@ if base_request.status_code == 200:
                 pretty_cve += " "
         if len(cvss) != 4:
             cvss += " "
-        if len(source) != 26:
-            for i in range (26 - len(source)):
+        if len(source) != 35:
+            for i in range (35 - len(source)):
                 source += " "
         nist_url = nist_url
         if len(nist_url) != 49:
             for i in range (49 - len(nist_url)):
                 nist_url += " "
         print(pretty_cve + " | " + cvss + " | " + source + " | " + nist_url + " |")
-        print("----------------------------------------------------------------------------------------------------------")
-
+        print("-------------------------------------------------------------------------------------------------------------------")
     # Max CVSS
     print("\nMax CVSS: " + str(max(cvss_list)))
 
