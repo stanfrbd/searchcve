@@ -6,7 +6,7 @@ ENVVIRTUEL_NOM="env-virtuel"
 ENVVIRTUEL_CHEMIN="./$ENVVIRTUEL_NOM"
 ENVVIRTUEL_PAQUETS="requests beautifulsoup4"
 
-### Fonctions supports 
+### Fonctions support 
 
 function searchcve () { 
 	python3 searchcve.py --url $1	
