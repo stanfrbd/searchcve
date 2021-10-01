@@ -116,7 +116,7 @@ def searchcve(url):
                     attrs={ 
                         "data-testid": "vuln-current-description-source" 
                     } 
-                )[0].string.strip() 
+                )[0].string.strip().replace(",", "") 
             except Exception: 
                 source = "Unknown"
 
