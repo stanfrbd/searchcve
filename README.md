@@ -22,7 +22,8 @@ python3 searchcve.py --url https://nvd.nist.gov/
 
 ### Developpement on Linux 
 
-Just in Bash (Ubuntu 18+) : ```sh
+Just in Bash (Ubuntu 18+) : 
+```sh
 ./developper.sh
 ```
 
