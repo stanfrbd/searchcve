@@ -19,9 +19,7 @@ import json
 import argparse
 import re
 import requests
-from os.path import exists
 from pathlib import Path
-import subprocess
 from datetime import datetime
 
 # Current date
@@ -65,8 +63,6 @@ def export_to_csv():
 # Core function
 
 def searchcve(url):
-    # Lists
-
     cvss_list = []
     cves_list = []
     sources_list = []
@@ -83,6 +79,7 @@ def searchcve(url):
             print("No CVE found, aborting.")
             return
 
+        # Get unique CVEs
         cves_list = sorted(set(cve_search))
 
         print("\nFound CVEs:\n")
@@ -230,22 +227,23 @@ def action_file(txt):
 
 # PARSER
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-c','--cve', help='Choose CVE e.g. "CVE-2020-1472"')
-parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
-parser.add_argument('-u','--url', help='Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory')
-parser.add_argument('-i','--input-file', help='Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c','--cve', help='Choose CVE e.g. "CVE-2020-1472"')
+    parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
+    parser.add_argument('-u','--url', help='Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory')
+    parser.add_argument('-i','--input-file', help='Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-if args.cve:
-    action_cve(args.cve)
-        
-if args.keyword:
-    action_keyword(args.keyword)
+    if args.cve:
+        action_cve(args.cve)
+            
+    if args.keyword:
+        action_keyword(args.keyword)
 
-if args.url:
-    action_url(args.url)
+    if args.url:
+        action_url(args.url)
 
-if args.input_file:
-    action_file(args.input_file)    
+    if args.input_file:
+        action_file(args.input_file)    
