@@ -94,7 +94,7 @@ def searchcve(url):
             nist_request = requests.get(nist_url) 
 
             soup = BeautifulSoup( nist_request.text, "html.parser" )
-            print( "##", soup.title.string ) 
+            # print( "##", soup.title.string ) 
 
             # CVSS
             try: 
