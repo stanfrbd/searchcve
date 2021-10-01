@@ -19,6 +19,7 @@ import json
 import argparse
 import re
 import requests
+from bs4 import BeautifulSoup
 from pathlib import Path
 from datetime import datetime
 
@@ -90,26 +91,33 @@ def searchcve(url):
 
             # URL
             nist_url = "https://nvd.nist.gov/vuln/detail/" + cves_list[i]
-            nist_request = requests.get(nist_url)
-            nist_text = nist_request.text
+            nist_request = requests.get(nist_url) 
+
+            soup = BeautifulSoup( nist_request.text, "html.parser" )
+            print( "##", soup.title.string ) 
 
             # CVSS
-            cvss_search = re.search("&lt;span data-testid=&#39;vuln-cvssv3-base-score&#39;&gt;[0-9][0-9]?\.[0-9]", nist_text)
-            if cvss_search is not None:
-                cvss = cvss_search.group().split(";").pop()
-            elif cvss_search is None:
-                cvss = "0.0"
+            try: 
+                el_parent = soup.find( "input",attrs={ "id" : "nistV3MetricHidden" } )["value"] 
+                soup_internal = BeautifulSoup( el_parent, "html.parser" )
+                cvss = soup_internal.find_all( 
+                    "span", 
+                    attrs={ 
+                        "data-testid": "vuln-cvssv3-base-score" 
+                    } 
+                )[0].string.strip() 
+            except Exception: 
+                cvss = "0.0" 
             
             # Source
-            potential_source = re.search("\"vuln-current-description-source\">[0-9A-Za-z, \./@\(\)]+</span>", nist_text)
-            if potential_source is not None:
-                potential_source = potential_source.group()
-                potential_source = potential_source.replace("<", ";")
-                potential_source = potential_source.replace(">", ";")
-                # Avoid CSV error
-                potential_source = potential_source.replace(",", "")
-                source = potential_source.split(";")[1]
-            elif potential_source is None:
+            try: 
+                source = soup.find_all( 
+                    "span", 
+                    attrs={ 
+                        "data-testid": "vuln-current-description-source" 
+                    } 
+                )[0].string.strip() 
+            except Exception: 
                 source = "Unknown"
 
             cvssf = float(cvss)
@@ -146,8 +154,7 @@ def searchcve(url):
         export_to_csv()
 
     else:
-        print("HTTP error: " + str(base_request.status_code))
-        print("Aborting.")
+        raise Exception( "HTTP error: " + str(base_request.status_code) ) 
 
 # CVE -c / --cve
 
@@ -225,9 +232,9 @@ def action_file(txt):
     else:
         print("\"" + txt + "\" is not a valid file, aborting.")
 
-# PARSER
+# MAIN
 
-if __name__ == "__main__":
+def main(): 
     parser = argparse.ArgumentParser()
     parser.add_argument('-c','--cve', help='Choose CVE e.g. "CVE-2020-1472"')
     parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
@@ -247,3 +254,11 @@ if __name__ == "__main__":
 
     if args.input_file:
         action_file(args.input_file)    
+
+if __name__ == "__main__":
+    try: 
+        main() 
+    except Exception as err: 
+        print( "General error : ", err ) 
+        exit( 1 )
+    
