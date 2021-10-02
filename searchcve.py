@@ -240,12 +240,13 @@ def main():
     parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
     parser.add_argument('-u','--url', help='Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory')
     parser.add_argument('-i','--input-file', help='Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory')
-
+    
+    global args
     args = parser.parse_args()
 
     if args.cve:
         action_cve(args.cve)
-            
+
     if args.keyword:
         action_keyword(args.keyword)
 
