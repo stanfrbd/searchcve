@@ -152,6 +152,7 @@ def searchcve(url):
 
         # Export
         export_to_csv()
+        csv = ""
 
     else:
         raise Exception( "HTTP error: " + str(base_request.status_code) ) 
