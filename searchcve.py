@@ -57,7 +57,7 @@ def find_urls(string):
 
 def export_to_csv():
     print("\nGenerated CSV: ./" + today + "-export.csv\n")
-    f = open(today + "-export.csv", "w")
+    f = open(today + "-export.csv", "a")
     f.write(csv)
     f.close()
 

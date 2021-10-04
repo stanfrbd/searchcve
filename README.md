@@ -7,9 +7,9 @@
 
 ### Dependencies
 
-* `requests` must be installed.
+* `requests` and `bs4` must be installed.
 
-`pip install requests` should do this job :)
+`pip install requests && pip install bs4` should do this job :)
 
 ### Example of usage
 
