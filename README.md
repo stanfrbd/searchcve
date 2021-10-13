@@ -20,15 +20,18 @@ python3 searchcve.py --url https://arstechnica.com/gadgets/2021/07/feds-list-the
 python3 searchcve.py --url https://nvd.nist.gov/ 
 ```
 
-### Developpement on Linux 
+### Development on Linux
 
-Just in Bash (Ubuntu 18+) : 
+Just in Bash (Ubuntu 18+):
 ```sh
-./developper.sh
+chmod +x developer.sh
+./developer.sh
 ```
 
 ### On Linux
 ```sh
+chmod +x searchcve.py
+
 ./searchcve.py -u https://us-cert.cisa.gov/ncas/alerts/aa21-209a
 ./searchcve.py --url https://nvd.nist.gov/ 
 ```
