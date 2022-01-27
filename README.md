@@ -7,9 +7,9 @@
 
 ### Dependencies
 
-* `requests` and `bs4` must be installed.
+* `requests` and `bs4` (or `beautifulsoup4`) must be installed.
 
-`pip install requests && pip install bs4` should do this job :)
+`pip install -r requirements.txt` should do this job :)
 
 ### Example of usage
 
