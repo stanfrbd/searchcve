@@ -3,13 +3,24 @@
 
 > Generates a CSV file in the current directory.
 
-> Uses the NIST API to get info.
+> Uses the NIST API v2 to get info.
 
-### Dependencies
+### Install dependencies
 
-* `requests` and `bs4` (or `beautifulsoup4`) must be installed.
+* `requests`, `bs4` (or `beautifulsoup4`) and `prettytable` must be installed.
 
-`pip install -r requirements.txt` should do this job :)
+```
+pip install -r requirements.txt
+```
+
+## Proxy
+
+If you need to use a proxy, then write it at the beginning of the script in the variable `proxy`.
+
+```
+# Your proxy here...
+proxy = "http://your.proxy.there:8080"
+```
 
 ### Example of usage
 
