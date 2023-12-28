@@ -22,6 +22,14 @@ import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
 from datetime import datetime
+import time
+from prettytable import PrettyTable
+
+# disable ssl warning in case of proxy like Zscaler which breaks ssl...
+requests.packages.urllib3.disable_warnings()
+
+# Your proxy here...
+proxy = ""
 
 # Current date
 
@@ -56,8 +64,9 @@ def find_urls(string):
     return [x[0] for x in url]
 
 def export_to_csv():
-    print("\nGenerated CSV: ./" + today + "-export.csv\n")
-    f = open(today + "-export.csv", "a")
+    filename = "{}-export.csv".format(today)
+    print("\nGenerated CSV: ./{}-export.csv\n".format(filename))
+    f = open(filename, "a")
     f.write(csv)
     f.close()
 
@@ -69,54 +78,54 @@ def searchcve(url):
     sources_list = []
     url_list = []
     global csv
-
-    base_request = requests.get(url)
+    
+    proxy_servers = { 'http': proxy, 'https': proxy }
+    base_request = requests.get(url, timeout=10, proxies=proxy_servers, verify=False)
 
     if base_request.status_code == 200:
         base_text = base_request.text
         cve_search = re.findall("CVE-[0-9]{4}-[0-9]{4,}", base_text)
 
         if cve_search == []:
-            print("No CVE found, aborting.")
+            print("[i] No CVE found, aborting.")
             return
 
         # Get unique CVEs
         cves_list = sorted(set(cve_search))
 
-        print("\nFound CVEs:\n")
-        print("-------------------------------------------------------------------------------------------------------------------")
-        print("CVE              | CVSS | Source                              | URL                                               |")
-        print("-------------------------------------------------------------------------------------------------------------------")
+        table = PrettyTable()
+        table.field_names = ["CVE", "CVSS", "Source", "URL"]
+        
         for i in range (0, len(cves_list)):
 
             # URL
-            nist_url = "https://nvd.nist.gov/vuln/detail/" + cves_list[i]
-            nist_request = requests.get(nist_url) 
+            nist_url = "https://nvd.nist.gov/vuln/detail/{}".format(cves_list[i])
 
-            soup = BeautifulSoup( nist_request.text, "html.parser" )
-            # print( "##", soup.title.string ) 
+            nist_request = requests.get(nist_url, timeout=10, proxies=proxy_servers, verify=False) 
+
+            soup = BeautifulSoup(nist_request.text, "html.parser")
 
             # CVSS
-            try: 
-                el_parent = soup.find( "input",attrs={ "id" : "nistV3MetricHidden" } )["value"] 
-                soup_internal = BeautifulSoup( el_parent, "html.parser" )
-                cvss = soup_internal.find_all( 
+            try:
+                el_parent = soup.find("input",attrs={ "id" : "nistV3MetricHidden" })["value"] 
+                soup_internal = BeautifulSoup(el_parent, "html.parser")
+                cvss = soup_internal.find_all(
                     "span", 
                     attrs={ 
                         "data-testid": "vuln-cvssv3-base-score" 
                     } 
-                )[0].string.strip() 
+               )[0].string.strip() 
             except Exception: 
                 cvss = "0.0" 
             
             # Source
             try: 
-                source = soup.find_all( 
+                source = soup.find_all(
                     "span", 
                     attrs={ 
                         "data-testid": "vuln-current-description-source" 
                     } 
-                )[0].string.strip().replace(",", "") 
+               )[0].string.strip().replace(",", "") 
             except Exception: 
                 source = "Unknown"
 
@@ -130,32 +139,20 @@ def searchcve(url):
             # CSV text
             csv += cves_list[i] + "," + cvss + "," + source + "," + nist_url + "\n"
             
-            # Pretty print
-            pretty_cve = cves_list[i]
-            if len(cves_list[i]) != 16:
-                for i in range (16 - len(cves_list[i])):
-                    pretty_cve += " "
-            if len(cvss) != 4:
-                cvss += " "
-            if len(source) != 35:
-                for i in range (35 - len(source)):
-                    source += " "
-            nist_url = nist_url
-            if len(nist_url) != 49:
-                for i in range (49 - len(nist_url)):
-                    nist_url += " "
-            print(pretty_cve + " | " + cvss + " | " + source + " | " + nist_url + " |")
-            print("-------------------------------------------------------------------------------------------------------------------")
+            table.add_row([cves_list[i], cvss, source, nist_url])
         
+            # Printing during the loop, erasing
+            print("\033[2J\033[H" + str(table))
+
         # Max CVSS
-        print("\nMax CVSS: " + str(max(cvss_list)))
+        print("\n[i] Max CVSS: {}".format(str(max(cvss_list))))
 
         # Export
         export_to_csv()
         csv = ""
 
     else:
-        raise Exception( "HTTP error: " + str(base_request.status_code) ) 
+        raise Exception("[!] HTTP error: {}".format(str(base_request.status_code))) 
 
 # CVE -c / --cve
 
@@ -163,54 +160,62 @@ def action_cve(txt):
     if is_cve(txt):
         cve_info(txt)
     else:
-        print("\"" + txt + "\" is not a valid CVE, aborting.")
+        print('[!] "{}" is not a valid CVE, aborting.'.format(txt))
 
 def cve_info(txt):
-    nist_api_url = "https://services.nvd.nist.gov/rest/json/cve/1.0/" + txt
-    base_request = requests.get(nist_api_url)
+    proxy_servers = { 'http': proxy, 'https': proxy }
+    nist_api_url = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={}".format(txt)
+    base_request = requests.get(nist_api_url, timeout=10, proxies=proxy_servers, verify=False)
     if base_request.status_code == 200:
         todos = json.loads(base_request.text)
-        cve = todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ID"]
-        source = todos["result"]["CVE_Items"][0]["cve"]["CVE_data_meta"]["ASSIGNER"]
-        print("cve: ", cve)
-        print("publishedDate: ", todos["result"]["CVE_Items"][0]["publishedDate"].split("T")[0])
-        print("lastModifiedDate: ", todos["result"]["CVE_Items"][0]["lastModifiedDate"].split("T")[0])
-        print("assigner: ", source)
-        print("description: ", todos["result"]["CVE_Items"][0]["cve"]["description"]["description_data"][0]["value"])
+        cve = todos["vulnerabilities"][0]["cve"]["id"]
+        source = todos["vulnerabilities"][0]["cve"]["sourceIdentifier"]
+        published_date = todos["vulnerabilities"][0]["cve"]["published"].split("T")[0]
+        last_modified_date = todos["vulnerabilities"][0]["cve"]["lastModified"].split("T")[0]
+        english_description = todos["vulnerabilities"][0]["cve"]["descriptions"][0]["value"]
+        print("CVE: {}".format(cve))
+        print("Published date: {}".format(published_date))
+        print("Last modified date: {}".format(last_modified_date))
+        print("Source: {}".format(source))
+        print("Description: {}".format(english_description))
         
         try:
-            cvss = todos["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["baseScore"]
-            print("baseScore: ", cvss)
+            cvss = todos["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseScore"]
+            severity = todos["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseSeverity"]
+            print("CVSS 3.1 (Base Score): {} ({})".format(cvss, severity))
 
         except KeyError:
-            print("baseScore: Unknown or too old")
+            print("CVSS 3.1 (Base Score): Unknown or too old")
             cvss = "0.0"
-        nist_url = "https://nvd.nist.gov/vuln/detail/" + txt
-        print("More info: " + nist_url + "\n")
+        nist_url = "https://nvd.nist.gov/vuln/detail/{}".format(txt)
+        print("More info: {} \n".format(nist_url))
 
         if args.input_file:
             global csv
             csv += cve + "," + str(cvss) + "," + source + "," + nist_url + "\n"
+            # Add delay to avoid blocking
+            delay = 30
+            print("[i] Waiting {} seconds to avoid API limitations...".format(delay))
+            time.sleep(delay)
     else:
-        print('"', txt, "\" not found in database.")
+        print('[!] "{}" not found in database.'.format(txt))
 
 # KEYWORD -k / --keyword
 
 def action_keyword(txt):
     if txt != "":
-        action_url("https://services.nvd.nist.gov/rest/json/cves/1.0?keyword=" + txt)
+        action_url("https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={}".format(txt))
     else:
-        print("\"" + txt + "\" is not a valid keyword, aborting.")
+        print('[!] "{}" is not a valid keyword, aborting.'.format(txt))
 
 # URL -u / --url
 
 def action_url(txt):
     if is_url(txt):
         print(txt)
-        # subprocess.call(["python3", "searchcve.py", txt])
         searchcve(txt)
     else:
-        print("\"" + txt + "\" is not a valid URL, aborting.")
+        print('[!] "{}" is not a valid URL, aborting.'.format(txt))
 
 # INPUT_FILE -i / --input-file
 
@@ -231,7 +236,7 @@ def action_file(txt):
             for i in range (0, len(urls_list_file)):
                 action_url(urls_list_file[i])
     else:
-        print("\"" + txt + "\" is not a valid file, aborting.")
+        print('[!] "{}" is not a valid file, aborting.'.format(txt))
 
 # MAIN
 
@@ -259,8 +264,12 @@ def main():
 
 if __name__ == "__main__":
     try: 
-        main() 
+        main()
+    except KeyboardInterrupt:
+        print("\n[!] KeyboardInterrupt Detected.")
+        print("[i] Exiting...")
+        exit(0)
     except Exception as err: 
-        print( "General error : ", err ) 
-        exit( 1 )
+        print("[!] General error: {}".format(str(err)))
+        exit(1)
     
