@@ -1,11 +1,20 @@
 # searchcve
-> Web scrapping tool written in python3, using regex, to get CVEs, Source and URLs.
 
-> Generates a CSV file in the current directory.
+Web scrapping tool written in python3, using regex, to get CVEs, Source and URLs.
 
-> Uses the NIST API v2 to get info.
+![GitHub stars](https://img.shields.io/github/stars/stanfrbd/searchcve?style=social)
+![GitHub issues](https://img.shields.io/github/issues/stanfrbd/searchcve)
+![License](https://img.shields.io/github/license/stanfrbd/searchcve)
 
-### Install dependencies
+# Features
+
+* Web scrapping tool written in python3, using regex, to get CVEs, Source and URLs.
+* Generates a CSV file in the current directory.
+* Uses the NIST API v2 to get info.
+
+# Getting started
+
+## Install dependencies
 
 * `requests`, `bs4` (or `beautifulsoup4`) and `prettytable` must be installed.
 
