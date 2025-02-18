@@ -3,16 +3,20 @@
 # Stanislas M. 2021-09-28
 
 """
-usage: searchcve_api.py [-h] [-c CVE] [-k KEYWORD] [-u URL] [-i INPUT_FILE]
+usage: searchcve.py [-h] [-c CVE] [-k KEYWORD] [-u URL] [-i INPUT_FILE] [-p PROXY]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c CVE, --cve CVE     Choose CVE e.g. "CVE-2020-1472"
   -k KEYWORD, --keyword KEYWORD
-                        Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory
+                        Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to
+                        csv in the current directory
   -u URL, --url URL     Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory
   -i INPUT_FILE, --input-file INPUT_FILE
-                        Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory
+                        Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv
+                        in the current directory
+  -p PROXY, --proxy PROXY
+                        Choose proxy e.g. "http://127.0.0.1:9000"
 """
 
 import json
@@ -65,7 +69,7 @@ def find_urls(string):
 
 def export_to_csv():
     filename = "{}-export.csv".format(today)
-    print("\nGenerated CSV: ./{}-export.csv\n".format(filename))
+    print("\nGenerated CSV: ./{}\n".format(filename))
     f = open(filename, "a")
     f.write(csv)
     f.close()
@@ -107,16 +111,13 @@ def searchcve(url):
 
             # CVSS
             try:
-                el_parent = soup.find("input",attrs={ "id" : "nistV3MetricHidden" })["value"] 
-                soup_internal = BeautifulSoup(el_parent, "html.parser")
-                cvss = soup_internal.find_all(
-                    "span", 
-                    attrs={ 
-                        "data-testid": "vuln-cvssv3-base-score" 
-                    } 
-               )[0].string.strip() 
-            except Exception: 
-                cvss = "0.0" 
+                cvss_element = soup.find("a", attrs={ "data-testid": "vuln-cvss3-cna-panel-score" })
+                if not cvss_element:
+                    cvss_element = soup.find("a", attrs={ "data-testid": "vuln-cvss3-panel-score" })
+                cvss = cvss_element.text.split()[0]  # Extract the base score
+            except Exception as err:
+                print("[!] Error: {}".format(str(err)))
+                cvss = "0.0"
             
             # Source
             try: 
@@ -246,7 +247,8 @@ def main():
     parser.add_argument('-k','--keyword', help='Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory')
     parser.add_argument('-u','--url', help='Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory')
     parser.add_argument('-i','--input-file', help='Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory')
-    
+    parser.add_argument('-p', '--proxy', help='Choose proxy e.g. "http://127.0.0.1:9000"')
+
     global args
     args = parser.parse_args()
 
@@ -260,7 +262,11 @@ def main():
         action_url(args.url)
 
     if args.input_file:
-        action_file(args.input_file)    
+        action_file(args.input_file)
+
+    if args.proxy:
+        global proxy
+        proxy = args.proxy    
 
 if __name__ == "__main__":
     try: 
