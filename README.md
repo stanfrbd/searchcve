@@ -26,11 +26,16 @@ pip install -r requirements.txt
 
 ## Proxy
 
-If you need to use a proxy, then write it at the beginning of the script in the variable `proxy`.
+If you need to use a proxy, then write use the `-p` or `--proxy` argument.
 
+```sh
+python3 searchcve.py -u "https://us-cert.cisa.gov/ncas/alerts/aa21-209a" -p "http://127.0.0.1:9000"
 ```
-# Your proxy here...
-proxy = "http://your.proxy.there:8080"
+
+Or you can set the proxy in the code of the script.
+
+```python
+proxy = "http://127.0.0.1:9000"
 ```
 
 ### Example of usage
@@ -64,16 +69,20 @@ chmod +x searchcve.py
 
 > Command line tool that uses the NIST API to get resources.
 ```sh
-usage: searchcve_api.py [-h] [-c CVE] [-k KEYWORD] [-u URL] [-i INPUT_FILE]
+usage: searchcve.py [-h] [-c CVE] [-k KEYWORD] [-u URL] [-i INPUT_FILE] [-p PROXY]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c CVE, --cve CVE     Choose CVE e.g. "CVE-2020-1472"
   -k KEYWORD, --keyword KEYWORD
-                        Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to csv in the current directory
+                        Choose keyword e.g. "microsoft" -- it will give the 20 latest vulnerabilities and export to
+                        csv in the current directory
   -u URL, --url URL     Choose URL e.g. "https://nvd.nist.gov/" -- it will export to csv in the current directory
   -i INPUT_FILE, --input-file INPUT_FILE
-                        Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv in the current directory
+                        Choose the path to input file containing CVEs or URLs e.g. "test.csv" -- it will export to csv
+                        in the current directory
+  -p PROXY, --proxy PROXY
+                        Choose proxy e.g. "http://127.0.0.1:9000"
 ```
 
 ```sh
